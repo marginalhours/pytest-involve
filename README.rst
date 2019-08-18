@@ -18,7 +18,9 @@ pytest-invert
     :target: https://ci.appveyor.com/project/MisterKeefe/pytest-invert/branch/master
     :alt: See Build Status on AppVeyor
 
-Run tests covering a specific file or changeset
+`pytest-invert` is a `pytest` plugin for running only tests which cover a given file
+or set of files. It's called `pytest-invert` because this inverts the normal order of things:
+Usually the test set to run is specified and coverage collected based on that set.
 
 ----
 
@@ -28,14 +30,13 @@ This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`
 Features
 --------
 
-* TODO
-
+* Run unit tests covering specific file(s) via the command line flag `--covering-file`
 
 Requirements
 ------------
 
-* TODO
-
+* `pytest`
+* That's it.
 
 Installation
 ------------
