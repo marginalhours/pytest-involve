@@ -20,7 +20,12 @@ pytest-invert
 
 `pytest-invert` is a `pytest` plugin for running only tests which cover a given file
 or set of files. It's called `pytest-invert` because this inverts the normal order of things:
-Usually the test set to run is specified and coverage collected based on that set.
+Usually the test set to run is specified and coverage collected based on that set. When `pytest-invert`
+is used, instead you specify the file(s) you want to cover, and test files are selected based
+on whether they import from those file(s) or not.
+
+TODO: Specify a member or function using the standard :: syntax (this will potentially only
+work for top-level members). Also, improve test coverage by a _lot_.
 
 ----
 
