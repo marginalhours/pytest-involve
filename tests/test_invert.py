@@ -22,14 +22,14 @@ def test_collection_of_single_file(testdir):
 
     result.stdout.fnmatch_lines([
          "Running tests covering files:",
-         "    ./one.py"
+         "*/one.py"
     ])
 
     assert result.ret == 0
 
 def test_collection_of_multiple_files(testdir):
-    """Test that a non-python file will raise an error if passed via the
-    --covering-file optional argument"""
+    """Test that test cases for multiple files can be collected using the
+    --covering-file argument multiple times"""
     testdir.makepyfile(
         one="""
         def func_one():
@@ -64,17 +64,11 @@ def test_collection_of_multiple_files(testdir):
 
     result.stdout.fnmatch_lines([
          "Running tests covering files:",
-         "    ./one.py",
-         "    ./two.py"
+         "*/two.py",
+         "*/one.py",
     ])
 
     assert result.ret == 0
-
-
-def test_collection_of_non_py_files(testdir):
-    """Test that multiple python files can be passed via the
-    --covering-file optional argument"""
-    assert False
 
 
 def test_proceeds_as_normal_if_arg_not_provided(testdir):
