@@ -1,37 +1,40 @@
 # -*- coding: utf-8 -*-
 import sys
-from pathlib import Path
 from functools import lru_cache
+from inspect import ismodule
+from pathlib import Path
 
 import pytest
-from inspect import ismodule
 
 
 def get_full_path_for_file(relative_path):
-    return str(Path(relative_path).absolute())
+    """Given a path provided on the command line, make it canonical"""
+    return str(Path(relative_path).resolve())
 
 
 @lru_cache()
 def get_full_file_paths_from_config(config):
     """Given a pytest config, return the set of files specified by the
-    --covering-file flag"""
-    files_covered = config.getoption("--covering-file") or []
+    --involving flag"""
+    files_covered = config.getoption("--involving") or []
 
-    full_file_paths = frozenset(
-        get_full_path_for_file(f) for f in files_covered
-    )
+    full_file_paths = frozenset(get_full_path_for_file(f) for f in files_covered)
 
     return full_file_paths
+
 
 @lru_cache()
 def should_module_be_included(module, requested_files):
     """Work out if a module should be included, exactly once"""
-    imported_module_files = get_original_files_members_were_defined_in(module.__dict__.values())
+    imported_module_files = get_original_files_members_were_defined_in(
+        module.__dict__.values()
+    )
 
-    if not (requested_files & imported_module_files):
+    if not requested_files & imported_module_files:
         return []
 
     return None
+
 
 def get_original_files_members_were_defined_in(module_members):
     """Given a module, track down the original files that all its members
@@ -49,16 +52,18 @@ def get_original_files_members_were_defined_in(module_members):
                     module_files.add(module.__file__)
     return module_files
 
+
 def pytest_addoption(parser):
-    """Add the --covering-file command line argument to the pytest argument
+    """Add the --involving command line argument to the pytest argument
     parser via the pytest_addoption hook. We use action=append so that this
     flag can be passed multiple times to build up a list of files to cover"""
-    group = parser.getgroup('invert')
+    group = parser.getgroup("involve")
     group.addoption(
-        '--covering-file',
-        action='append',
-        help='Python source file(s) to find tests covering'
+        "--involving",
+        action="append",
+        help="Python source files, modules, or module members to find tests involving",
     )
+
 
 def pytest_report_header(config):
     """Add the files being covered to the pytest preamble, via the
@@ -67,15 +72,15 @@ def pytest_report_header(config):
 
     if full_file_paths:
         return [
-            "Running tests covering files:",
-            *[f"    {f}" for f in full_file_paths]
+            "Running tests involving:",
+            *[f"    {f}" for f in sorted(full_file_paths)],
         ]
 
     return []
 
 
 def pytest_pycollect_makeitem(collector, name, obj):
-    """Don't collect from modules that don't import any file we care about"""
+    """Don"t collect from modules that don"t import any file we care about"""
     requested_files = get_full_file_paths_from_config(collector.config)
 
     if requested_files:

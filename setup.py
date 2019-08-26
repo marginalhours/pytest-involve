@@ -12,17 +12,17 @@ def read(fname):
 
 
 setup(
-    name='pytest-invert',
+    name='pytest-involve',
     version='0.1.0',
     author='Tom Keefe',
     author_email='tomlkeefe@gmail.com',
     maintainer='Tom Keefe',
     maintainer_email='tomlkeefe@gmail.com',
     license='MIT',
-    url='https://github.com/MisterKeefe/pytest-invert',
+    url='https://github.com/MisterKeefe/pytest-involve',
     description='Run tests covering a specific file or changeset',
     long_description=read('README.rst'),
-    py_modules=['pytest_invert'],
+    py_modules=['pytest_involve'],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     install_requires=['pytest>=3.5.0'],
     classifiers=[
@@ -45,7 +45,7 @@ setup(
     ],
     entry_points={
         'pytest11': [
-            'invert = pytest_invert',
+            'involve = pytest_involve',
         ],
     },
 )
