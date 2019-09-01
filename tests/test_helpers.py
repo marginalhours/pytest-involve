@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """This module contains unit tests for the helpers in pytest_involve.py"""
-import pytest
 from unittest import mock
+from pathlib import Path
+
+import pytest
+
 from pytest_involve import (
     build_involved_files_and_members,
-    get_file_attribute_for_module,
-    get_full_path_for_file,
     get_involved_files_and_members,
     get_involved_objects,
-    get_original_files_members_were_defined_in,
+    get_members_by_file,
     resolve_member_reference,
     should_module_be_included,
 )
@@ -54,36 +55,62 @@ def test_build_involved_files_and_members(mock_resolve_file, mock_resolve_member
     assert mock_resolve_file.mock_calls == [mock.call(f) for f in mock_input]
     assert mock_resolve_member.mock_calls == [mock.call(f) for f in mock_input]
 
-def test_get_file_attribute_for_module():
-    """Test that get_file_attribute imports the module and returns the
-    __file__ attribute"""
-    import_mock = mock.Mock()
-    import_mock.return_value.__file__ = mock.Mock()
 
-    with mock.patch("builtins.__import__", side_effect=import_mock):
-        module_file = get_file_attribute_for_module("some.module")
+@mock.patch(MODULE + ".build_involved_files_and_members", autospec=True)
+@mock.patch(MODULE + ".get_involved_objects", autospec=True)
+def test_get_involved_files_and_members(mock_get_involved, mock_build_involved):
+    """Test that get_involved_files_and_members calls
+    build_involved_files_and_members with the value of the --involved arguments
+    """
+    mock_config = mock.Mock()
 
-    assert module_file == import_mock.return_value.__file__
+    get_involved_files_and_members(mock_config)
 
-
-def test_get_full_path_for_file():
-    assert False
-
-
-def test_get_involved_files_and_members():
-    assert False
+    mock_get_involved.assert_called_with(mock_config)
+    mock_build_involved.assert_called_with(mock_get_involved.return_value)
 
 
 def test_get_involved_objects():
-    assert False
+    """Test that get_involved_objects looks up the objects in the config"""
+    mock_config = mock.Mock()
+    mock_config.getoption.return_value = ["one.py", "two.py::Class"]
+
+    assert get_involved_objects(mock_config) == ["one.py", "two.py::Class"]
 
 
-def test_get_original_files_members_were_defined_in():
-    assert False
+@mock.patch(MODULE + ".ismodule", autospec=True)
+def test_get_members_by_file(mock_is_module):
+    """Test that get_members_by_file returns the
+    correct list of (object, filename) tuples"""
+    mock_is_module.return_value = True
+
+    mock_member_1 = mock.Mock()
+    mock_member_1.__name__ = "mock_module_1"
+    mock_member_1.__file__ = "one.py"
+
+    mock_member_2 = mock.Mock()
+    mock_member_2.__name__ = "mock_module_2"
+    mock_member_2.__file__ = "two.py"
+
+    assert get_members_by_file({
+        "mock_module_1": mock_member_1,
+        "mock_module_2": mock_member_2
+    }) == {
+        "one.py": {"mock_module_1"},
+        "two.py": {"mock_module_2"}
+    }
 
 
-def test_should_module_be_included():
-    assert False
+@mock.patch(MODULE + ".get_members_by_file", autospec=True)
+def test_should_module_be_included(mock_get_members):
+    """Tests that should_module_be_included filters out modules not importing
+    relevant objects"""
+    mock_get_members.return_value = {"one.py": {"member_one"}, "two.py": {"member_two"}}
+
+    assert should_module_be_included(mock.Mock(), frozenset([
+        ("one.py", frozenset(["member_one"])),
+        ("two.py", frozenset(["member_two"]))
+    ])) == True
 
 
 @pytest.mark.parametrize(
