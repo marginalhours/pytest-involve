@@ -21,7 +21,7 @@ def pytest_addoption(parser):
         "--involving",
         action="append",
         help=(
-            "Python source files, modules, " "or module members to find tests involving"
+            "Python source files, modules, or module members to find tests involving"
         ),
     )
 
@@ -55,6 +55,49 @@ def pytest_pycollect_makeitem(collector, name, obj):
 
 # endregion
 
+# region datastructures
+
+class ImportSet:
+    """A utility class for holding which members from a module have been
+    imported into a file, plus if the module itself has been. This class
+    is used in two ways:
+
+    - For collecting the relevant files and members specified using --involving
+    - For collecting the imports into a module.
+
+    Once both have been done, comparing the two to see if any relevant things
+    are imported into a module is much simpler.
+    """
+    def __init__(self, module_file, has_full_import, imported_members=set()):
+        """Constructor
+
+        Arguments:
+            module_file (ModuleType): The file where a module is defined
+            has_full_import (bool): Whether or not the module is imported
+                                    completely into the module this ImportSet
+                                    belongs to
+        Keyword Arguments:
+            imported_members (Set[str]): Set of members imported into the module
+                                        (default: set())
+        """
+        self.module_file = module_file
+        self.has_full_import = has_full_import
+        self.imported_members = imported_members
+
+    def __hash__(self):
+        """Hash implementation to use with @lru_cache"""
+        return hash((self.module_file, self.has_full_import, frozenset(self.imported_members)))
+
+    def __eq__(self, other):
+        """Equality implementation mostly used for testing"""
+        if not isinstance(other, ImportSet):
+            return False
+        elif self.has_full_import != other.has_full_import:
+            return False
+        else:
+            return self.imported_members == other.imported_members
+
+# endregion
 
 @lru_cache()
 def get_involved_objects(config):
@@ -119,17 +162,10 @@ def should_module_be_included(module: ModuleType, involved_filter: FrozenSet[Tup
             imported_file_members = import_set.imported_members
             involved_file_members = involved_files_and_members[file_name]
 
-            if not imported_file_members or not involved_file_members:
-                # There are two different cases here:
-                #
-                # Case 1: imported_file_members is the empty set. This happens
-                # when the whole module is imported. In this case, we should
-                # return True.
-                #
-                # Case 2: involved_file_members is the empty set. This happens
-                # when the user has specified the entire module or file with
-                # --involving with no member filter. In this case, we should
-                # also return True.
+            if not involved_file_members:
+                # This happens when the user has specified the entire module or
+                # file with --involving with no member filter. In this case,
+                # we should also return True.
                 return True
 
             if involved_file_members & imported_file_members:
@@ -170,12 +206,14 @@ def build_involved_files_and_members(
         member = resolve_member_reference(involved_object)
 
         if not path in involved_files_and_members:
-            involved_files_and_members[path] = set()
+            involved_files_and_members[path] = ImportSet(path, False)
 
         if member:
-            involved_files_and_members[path].add(member)
+            involved_files_and_members[path].imported_members.add(member)
+        else:
+            involved_files_and_members[path].has_full_import = True
 
-    return frozenset((k, frozenset(v)) for k, v in involved_files_and_members.items())
+    return frozenset(involved_files_and_members.items())
 
 
 def resolve_file_or_module(raw_argument: str) -> str:
@@ -218,22 +256,6 @@ def resolve_member_reference(raw_argument: str) -> Optional[str]:
 
     return None
 
-
-class ImportSet:
-    """A utility class for holding which members from a module have been
-    imported into a file, plus if the module itself has been."""
-    def __init__(self, module_file, has_full_import):
-        self.module_file = module_file
-        self.has_full_import = has_full_import
-        self.imported_members = set()
-
-    def __eq__(self, other):
-        if not isinstance(other, ImportSet):
-            return False
-        elif self.has_full_import != other.has_full_import:
-            return False
-        else:
-            return self.imported_members == other.imported_members
 
 def get_members_by_file(
     module_members: Dict[str, object]
