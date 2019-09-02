@@ -12,6 +12,7 @@ from pytest_involve import (
     get_members_by_file,
     resolve_member_reference,
     should_module_be_included,
+    ImportSet,
 )
 
 
@@ -47,9 +48,11 @@ def test_build_involved_files_and_members(mock_resolve_file, mock_resolve_member
     result = build_involved_files_and_members(mock_input)
 
     assert result == frozenset(
-        [("file_one.py", frozenset()),
-        ("file_two.py", frozenset({"function_two"})),
-        ("file_three.py", frozenset({"function_three", "ClassThree"}))],
+        [
+            ("file_one.py", frozenset()),
+            ("file_two.py", frozenset({"function_two"})),
+            ("file_three.py", frozenset({"function_three", "ClassThree"})),
+        ]
     )
 
     assert mock_resolve_file.mock_calls == [mock.call(f) for f in mock_input]
@@ -92,25 +95,43 @@ def test_get_members_by_file(mock_is_module):
     mock_member_2.__name__ = "mock_module_2"
     mock_member_2.__file__ = "two.py"
 
-    assert get_members_by_file({
-        "mock_module_1": mock_member_1,
-        "mock_module_2": mock_member_2
-    }) == {
-        "one.py": {"mock_module_1"},
-        "two.py": {"mock_module_2"}
+    assert get_members_by_file(
+        {"mock_module_1": mock_member_1, "mock_module_2": mock_member_2}
+    ) == {
+        "one.py": ImportSet("mock_module_1", True),
+        "two.py": ImportSet("mock_module_2", True),
     }
 
 
 @mock.patch(MODULE + ".get_members_by_file", autospec=True)
 def test_should_module_be_included(mock_get_members):
-    """Tests that should_module_be_included filters out modules not importing
-    relevant objects"""
-    mock_get_members.return_value = {"one.py": {"member_one"}, "two.py": {"member_two"}}
+    """Tests that should_module_be_included returns True for a module
+    importing exactly the correct member"""
+    mock_get_members.return_value = {
+        "one.py": ImportSet("one.py", False),
+    }
 
-    assert should_module_be_included(mock.Mock(), frozenset([
-        ("one.py", frozenset(["member_one"])),
-        ("two.py", frozenset(["member_two"]))
-    ])) == True
+    assert (
+        should_module_be_included(
+            mock.Mock(),
+            frozenset(
+                [
+                    ("one.py", frozenset(["member_one"])),
+                ]
+            ),
+        )
+        == True
+    )
+
+@mock.patch(MODULE + ".get_members_by_file", autospec=True)
+def test_should_module_be_included_no_intersecting_files(mock_get_members):
+    """Test that should_module_be_included returns False when there are no
+    files in common"""
+    mock_get_members.return_value = {"one.py": ImportSet("one.py", False)}
+
+    assert not should_module_be_included(
+        mock.Mock(), frozenset([("two.py", frozenset([]))])
+    )
 
 
 @pytest.mark.parametrize(

@@ -110,7 +110,13 @@ def should_module_be_included(module: ModuleType, involved_filter: FrozenSet[Tup
         return False
     else:
         for file_name in intersecting_files:
-            imported_file_members = imported_files_and_members[file_name]
+            import_set = imported_files_and_members[file_name]
+
+            if import_set.has_full_import:
+                # If the file just imports the whole module, return True.
+                return True
+
+            imported_file_members = import_set.imported_members
             involved_file_members = involved_files_and_members[file_name]
 
             if not imported_file_members or not involved_file_members:
@@ -213,6 +219,22 @@ def resolve_member_reference(raw_argument: str) -> Optional[str]:
     return None
 
 
+class ImportSet:
+    """A utility class for holding which members from a module have been
+    imported into a file, plus if the module itself has been."""
+    def __init__(self, module_file, has_full_import):
+        self.module_file = module_file
+        self.has_full_import = has_full_import
+        self.imported_members = set()
+
+    def __eq__(self, other):
+        if not isinstance(other, ImportSet):
+            return False
+        elif self.has_full_import != other.has_full_import:
+            return False
+        else:
+            return self.imported_members == other.imported_members
+
 def get_members_by_file(
     module_members: Dict[str, object]
 ) -> Dict[str, Set[str]]:
@@ -226,18 +248,25 @@ def get_members_by_file(
         Dict[str, Set[str]]: Mapping from module file name to a set of members
                              imported from the module.
     """
-    module_files = defaultdict(set)
+    module_files = {}
 
     for member_name, member in module_members.items():
         if ismodule(member) and hasattr(member, "__file__"):
-            module_files[member.__file__].add(member.__name__)
+            if member.__file__ not in module_files:
+                module_files[member.__file__] = ImportSet(member.__file__, True)
+            else:
+                module_files[member.__file__].has_full_import = True
         else:
             module_name = getattr(member, "__module__", None)
             if module_name:
                 module = sys.modules[module_name]
                 if hasattr(module, "__file__"):
-                    module_files[module.__file__].add(
+
+                    if module.__file__ not in module_files:
+                        module_files[module.__file__] = ImportSet(module.__file__, False)
+
+                    module_files[module.__file__].imported_members.add(
                         getattr(member, "__name__", member_name)
                     )
 
-    return dict(module_files)
+    return module_files

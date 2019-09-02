@@ -390,7 +390,7 @@ def test_collection_from_module_member_collects_other_doesnt(testdir):
     result.stdout.fnmatch_lines(
         [
             "Running tests involving:",
-            "*/one.py::func_one",
+            "*one::func_one",
             "test_one.py::test_func_one PASSED*",
         ]
     )
@@ -401,13 +401,50 @@ def test_collection_from_module_member_collects_other_doesnt(testdir):
 def test_collection_from_module_member_whole_module_imported(testdir):
     """Test collecting when a single member is specified but the entire
     module has been imported into a test file"""
-    assert False
+    make_multiple_modules(testdir, ["one"])
+
+    testdir.makepyfile(
+        test_one="""
+        import one
+
+        def test_func_one():
+            assert one.func_one() == "one"
+    """)
+
+    result = testdir.runpytest("--involving=one::func_one", "-v")
+
+    result.stdout.fnmatch_lines([
+        "Running tests involving:",
+        "*one::func_one",
+        "test_one.py::test_func_one PASSED*"
+    ])
+
+    assert result.ret == 0
+
 
 
 def test_collection_from_module_member_whole_module_imported_and_aliased(testdir):
     """Test collecting when a single member is specified but the entire module
     has been imported into a test file under an alias"""
-    assert False
+    make_multiple_modules(testdir, ["one"])
+
+    testdir.makepyfile(
+        test_one="""
+        import one as two
+
+        def test_func_one():
+            assert two.func_one() == "one"
+    """)
+
+    result = testdir.runpytest("--involving=one::func_one", "-v")
+
+    result.stdout.fnmatch_lines([
+        "Running tests involving:",
+        "*one::func_one",
+        "test_one.py::test_func_one PASSED*"
+    ])
+
+    assert result.ret == 0
 
 
 def test_proceeds_as_normal_if_arg_not_provided(testdir):
