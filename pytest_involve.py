@@ -68,7 +68,7 @@ class ImportSet:
     Once both have been done, comparing the two to see if any relevant things
     are imported into a module is much simpler.
     """
-    def __init__(self, module_file, has_full_import, imported_members=set()):
+    def __init__(self, module_file, has_full_import, imported_members=None):
         """Constructor
 
         Arguments:
@@ -82,7 +82,7 @@ class ImportSet:
         """
         self.module_file = module_file
         self.has_full_import = has_full_import
-        self.imported_members = imported_members
+        self.imported_members = imported_members or set()
 
     def __hash__(self):
         """Hash implementation to use with @lru_cache"""
@@ -96,6 +96,13 @@ class ImportSet:
             return False
         else:
             return self.imported_members == other.imported_members
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        module_status_string = "✓" if self.has_full_import else "✗"
+        return f"<ImportSet from {self.module_file} [{module_status_string}] -- {self.imported_members}"
 
 # endregion
 
@@ -153,14 +160,15 @@ def should_module_be_included(module: ModuleType, involved_filter: FrozenSet[Tup
         return False
     else:
         for file_name in intersecting_files:
-            import_set = imported_files_and_members[file_name]
+            imported_set = imported_files_and_members[file_name]
+            involved_set = involved_files_and_members[file_name]
 
-            if import_set.has_full_import:
+            if imported_set.has_full_import:
                 # If the file just imports the whole module, return True.
                 return True
 
-            imported_file_members = import_set.imported_members
-            involved_file_members = involved_files_and_members[file_name]
+            imported_file_members = imported_set.imported_members
+            involved_file_members = involved_set.imported_members
 
             if not involved_file_members:
                 # This happens when the user has specified the entire module or
@@ -184,7 +192,7 @@ def should_module_be_included(module: ModuleType, involved_filter: FrozenSet[Tup
 
 def build_involved_files_and_members(
     raw_args: List[str]
-) -> FrozenSet[Tuple[str, FrozenSet[str]]]:
+) -> FrozenSet[Tuple[str, ImportSet]]:
     """Given a list of raw argument values passed into the --involving flag
     from a pytest config object, build a dictionary mapping from the file
     where an object is defined to a set of objects defined in that module
@@ -196,8 +204,7 @@ def build_involved_files_and_members(
 
     Returns:
         FrozenSet[Tuple[str, FrozenSet[str]]]: Keys are files to check for tests
-            involving, values are Sets of members in those files. The empty Set
-            is interpreted as "any member", not as "no member".
+            involving, values are ImportSets of members in those files.
     """
     involved_files_and_members = {}
 
@@ -259,7 +266,7 @@ def resolve_member_reference(raw_argument: str) -> Optional[str]:
 
 def get_members_by_file(
     module_members: Dict[str, object]
-) -> Dict[str, Set[str]]:
+) -> Dict[str, ImportSet]:
     """Given a collection of a module's members, return a mapping from the files
     where those members are defined to the names of the members.
 
@@ -267,7 +274,7 @@ def get_members_by_file(
         module_members (Dict[str, object]): Module __dict__ attribute value
 
     Returns:
-        Dict[str, Set[str]]: Mapping from module file name to a set of members
+        Dict[str, ImportSet]: Mapping from module file name to a set of members
                              imported from the module.
     """
     module_files = {}
