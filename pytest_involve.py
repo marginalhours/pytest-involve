@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""This module contains the implementation of the pytest_involve plugin. It
+is just about small enough to be implemented in a single *.py file, split
+into the following three regions with #region / #endRegion:
+
+* pytest hooks -- Functions the pytest framework will call
+* data structures -- the definition of the ImportSet class
+* plugin code -- core plugin functionality
+
+"""
 import sys
 from functools import lru_cache
 from inspect import ismodule
@@ -57,17 +66,19 @@ def pytest_pycollect_makeitem(collector, name, obj):
 
 # region datastructures
 
+
 class ImportSet:
     """A utility class for holding which members from a module have been
     imported into a file, plus if the module itself has been. This class
     is used in two ways:
 
     - For collecting the relevant files and members specified using --involving
-    - For collecting the imports into a module.
+    - For collecting the imports in a module.
 
     Once both have been done, comparing the two to see if any relevant things
     are imported into a module is much simpler.
     """
+
     def __init__(self, module_file, has_full_import, imported_members=None):
         """Constructor
 
@@ -86,7 +97,9 @@ class ImportSet:
 
     def __hash__(self):
         """Hash implementation to use with @lru_cache"""
-        return hash((self.module_file, self.has_full_import, frozenset(self.imported_members)))
+        return hash(
+            (self.module_file, self.has_full_import, frozenset(self.imported_members))
+        )
 
     def __eq__(self, other):
         """Equality implementation mostly used for testing"""
@@ -102,9 +115,17 @@ class ImportSet:
 
     def __str__(self):
         module_status_string = "✓" if self.has_full_import else "✗"
-        return f"<ImportSet from {self.module_file} [{module_status_string}] -- {self.imported_members}"
+        return (
+            f"<ImportSet "
+            f"{self.module_file} [{module_status_string}] "
+            f"-- {self.imported_members}"
+        )
+
 
 # endregion
+
+# region plugin code
+
 
 @lru_cache()
 def get_involved_objects(config):
@@ -128,7 +149,9 @@ def get_involved_files_and_members(config) -> Dict[str, Set[str]]:
 
 
 @lru_cache()
-def should_module_be_included(module: ModuleType, involved_filter: FrozenSet[Tuple[str, FrozenSet[str]]]):
+def should_module_be_included(
+    module: ModuleType, involved_filter: FrozenSet[Tuple[str, FrozenSet[str]]]
+):
     """Given a Python module and a dictionary filter object of files and members
     specified with the --involving flag, decide if tests from the module
     should be included in the pytest run.
@@ -166,8 +189,13 @@ def should_module_be_included(module: ModuleType, involved_filter: FrozenSet[Tup
             if imported_set.has_full_import or involved_set.has_full_import:
                 # If either set has a full import, return True.
                 # This deals with 2 cases:
+                #
                 # (1) involved module, imported member
-                # (2) involved member, full module import
+                # (2) involved member, imported module
+                #
+                # In either case there is a possibility that the module
+                # contains a relevant test, and recall is more important than
+                # precision.
                 return True
 
             imported_file_members = imported_set.imported_members
@@ -261,9 +289,7 @@ def resolve_member_reference(raw_argument: str) -> Optional[str]:
     return None
 
 
-def get_members_by_file(
-    module_members: Dict[str, object]
-) -> Dict[str, ImportSet]:
+def get_members_by_file(module_members: Dict[str, object]) -> Dict[str, ImportSet]:
     """Given a collection of a module's members, return a mapping from the files
     where those members are defined to the names of the members.
 
@@ -289,10 +315,15 @@ def get_members_by_file(
                 if hasattr(module, "__file__"):
 
                     if module.__file__ not in module_files:
-                        module_files[module.__file__] = ImportSet(module.__file__, False)
+                        module_files[module.__file__] = ImportSet(
+                            module.__file__, False
+                        )
 
                     module_files[module.__file__].imported_members.add(
                         getattr(member, "__name__", member_name)
                     )
 
     return module_files
+
+
+# endregion

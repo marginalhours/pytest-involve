@@ -19,13 +19,31 @@ pytest-involve
     :alt: See Build Status on AppVeyor
 
 `pytest-involve` is a `pytest` plugin for running only tests which cover a given file
-or set of files. It's called `pytest-involve` because this involves the normal order of things:
+or set of files. It's called `pytest-involve` because it lets you run tests "involving"
+modules or members from those modules.
+
 Usually the test set to run is specified and coverage collected based on that set. When `pytest-involve`
 is used, instead you specify the file(s) you want to cover, and test files are selected based
 on whether they import from those file(s) or not.
 
-TODO: Specify a member or function using the standard :: syntax (this will potentially only
-work for top-level members). Also, improve test coverage by a _lot_.
+Usages
+------
+
+`pytest-involve` adds one command line argument to `pytest`, namely `--involving`.
+This can be provided a file path, a module import path (such as you would use in a
+Python interpreter), or either of the above suffixed with `::` and the name of a
+function or class defined in that file.
+
+`pytest --involving ./path/to/file.py`
+
+`pytest --involving importable.module.path`
+
+`pytest --involving ./path/to/file.py::function_or_class_in_file`
+
+`pytest --involving importable.module.path::member`
+
+**NB: The `::member` syntax will only work on anything with a `__file__` attribute
+(so, mostly classes and functions).**
 
 ----
 
@@ -49,10 +67,6 @@ Installation
 You can install "pytest-involve" via `pip`_ from `PyPI`_::
 
     $ pip install pytest-involve
-
-
-Usage
------
 
 * TODO
 
