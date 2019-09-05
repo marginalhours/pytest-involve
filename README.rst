@@ -18,32 +18,40 @@ pytest-involve
     :target: https://ci.appveyor.com/project/MisterKeefe/pytest-involve/branch/master
     :alt: See Build Status on AppVeyor
 
-`pytest-involve` is a `pytest` plugin for running only tests which cover a given file
-or set of files. It's called `pytest-involve` because it lets you run tests "involving"
+``pytest-involve`` is a ``pytest`` plugin for running only tests which cover a given file
+or set of files. It's called ``pytest-involve`` because it lets you run tests "involving"
 modules or members from those modules.
 
-Usually the test set to run is specified and coverage collected based on that set. When `pytest-involve`
+Usually the test set to run is specified and coverage collected based on that set. When ``pytest-involve``
 is used, instead you specify the file(s) you want to cover, and test files are selected based
 on whether they import from those file(s) or not.
 
 Usages
 ------
 
-`pytest-involve` adds one command line argument to `pytest`, namely `--involving`.
+``pytest-involve`` adds one command line argument to ``pytest``, namely ``--involving``.
 This can be provided a file path, a module import path (such as you would use in a
-Python interpreter), or either of the above suffixed with `::` and the name of a
-function or class defined in that file.
+Python interpreter), or either of the above suffixed with ``::`` and the name of a
+function or class defined in that file:
 
-`pytest --involving ./path/to/file.py`
+``pytest --involving ./path/to/file.py``
 
-`pytest --involving importable.module.path`
+``pytest --involving importable.module.path``
 
-`pytest --involving ./path/to/file.py::function_or_class_in_file`
+``pytest --involving ./path/to/file.py::member``
 
-`pytest --involving importable.module.path::member`
+``pytest --involving importable.module.path::member``
 
-**NB: The `::member` syntax will only work on anything with a `__file__` attribute
+**NB: The ``::member`` syntax will only work on anything with a ``__file__`` attribute
 (so, mostly classes and functions).**
+
+This will have the effect of only collecting and running tests which are defined in modules
+whose imports overlap with the file(s) and member(s) specified with the ``--involving`` flag.
+
+Where possible, the plugin aims for recall over precision: It might run a few more tests that
+aren't strictly necessary, but it shouldn't ignore any tests that are.
+
+``pytest-involve`` should play nicely with many other ``pytest`` plugins.
 
 ----
 
@@ -53,12 +61,12 @@ This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`
 Features
 --------
 
-* Run unit tests covering specific file(s) via the command line flag `--involving`
+* Run unit tests covering specific file(s) via the command line flag ``--involving``
 
 Requirements
 ------------
 
-* `pytest`
+* ``pytest``
 * That's it.
 
 Installation

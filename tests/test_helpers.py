@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """This module contains unit tests for the helpers in pytest_involve.py"""
 from unittest import mock
-from pathlib import Path
 
 import pytest
 

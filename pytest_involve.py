@@ -1,22 +1,25 @@
 # -*- coding: utf-8 -*-
-"""This module contains the implementation of the pytest_involve plugin. It
+"""
+This module contains the implementation of the pytest_involve plugin. It
 is just about small enough to be implemented in a single *.py file, split
-into the following three regions with #region / #endRegion:
+into the following four regions with #region / #endRegion:
 
+* imports
 * pytest hooks -- Functions the pytest framework will call
 * data structures -- the definition of the ImportSet class
 * plugin code -- core plugin functionality
 
 """
+# region imports
+
 import sys
 from functools import lru_cache
 from inspect import ismodule
 from pathlib import Path
 from typing import Dict, List, Set, Optional, FrozenSet, Tuple
 from types import ModuleType
-from collections import defaultdict
 
-import pytest
+# endregion
 
 # region pytest hooks
 
