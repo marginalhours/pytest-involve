@@ -163,18 +163,15 @@ def should_module_be_included(module: ModuleType, involved_filter: FrozenSet[Tup
             imported_set = imported_files_and_members[file_name]
             involved_set = involved_files_and_members[file_name]
 
-            if imported_set.has_full_import:
-                # If the file just imports the whole module, return True.
+            if imported_set.has_full_import or involved_set.has_full_import:
+                # If either set has a full import, return True.
+                # This deals with 2 cases:
+                # (1) involved module, imported member
+                # (2) involved member, full module import
                 return True
 
             imported_file_members = imported_set.imported_members
             involved_file_members = involved_set.imported_members
-
-            if not involved_file_members:
-                # This happens when the user has specified the entire module or
-                # file with --involving with no member filter. In this case,
-                # we should also return True.
-                return True
 
             if involved_file_members & imported_file_members:
                 # Non-empty intersection between imported and involved members.

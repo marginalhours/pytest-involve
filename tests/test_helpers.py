@@ -149,6 +149,19 @@ def test_should_module_be_included_no_intersecting_members_but_whole_import(
     assert should_module_be_included(mock.Mock(), mock_involved)
 
 
+@mock.patch(MODULE + ".get_members_by_file", autospec=True)
+def test_should_module_be_included_no_imported_members_but_whole_module(
+    mock_get_members
+):
+    """Test that should_module_be_included returns True when there are no
+    members in common but the entire module is specified as an involved file.
+    """
+    mock_get_members.return_value = {"one.py": ImportSet("one.py", False, {"func_one"})}
+    mock_involved = frozenset([("one.py", ImportSet("one.py", True, {"func_two"}))])
+
+    assert should_module_be_included(mock.Mock(), mock_involved)
+
+
 @pytest.mark.parametrize(
     "input, expected",
     [
