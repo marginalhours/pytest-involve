@@ -31,8 +31,7 @@ Usages
 
 ``pytest-involve`` adds one command line argument to ``pytest``, namely ``--involving``.
 This can be provided a file path, a module import path (such as you would use in a
-Python interpreter), or either of the above suffixed with ``::`` and the name of a
-function or class defined in that file:
+Python interpreter), or either of the above suffixed with ``::`` and the name of something defined in there:
 
 ``pytest --involving ./path/to/file.py``
 
@@ -42,16 +41,16 @@ function or class defined in that file:
 
 ``pytest --involving importable.module.path::member``
 
-**NB: The ``::member`` syntax will only work on anything with a ``__file__`` attribute
-(so, mostly classes and functions).**
-
 This will have the effect of only collecting and running tests which are defined in modules
 whose imports overlap with the file(s) and member(s) specified with the ``--involving`` flag.
 
-Where possible, the plugin aims for recall over precision: It might run a few more tests that
+The plugin aims for recall over precision: It might run a few tests that
 aren't strictly necessary, but it shouldn't ignore any tests that are.
 
-``pytest-involve`` should play nicely with many other ``pytest`` plugins.
+The ``::member`` syntax will only work for things with a ``__file__`` attribute
+(so, mostly classes and functions).
+
+``pytest-involve`` should play nicely with most other ``pytest`` plugins.
 
 ----
 
@@ -86,7 +85,7 @@ the coverage at least stays the same before you submit a pull request.
 License
 -------
 
-Distributed under the terms of the `MIT`_ license, "pytest-involve" is free and open source software
+Distributed under the terms of the `MIT`_ license, "pytest-involve" is free and open source software.
 
 
 Issues

@@ -15,7 +15,6 @@ from pytest_involve import (
     resolve_file_or_module,
     should_module_be_included,
     ImportSet,
-    pytest_addoption,
     pytest_pycollect_makeitem,
     pytest_report_header,
 )
@@ -47,7 +46,7 @@ def test_pytest_pycollect_make_item_succeeds(mock_get_involved, mock_should_incl
 
     mock_collector = mock.Mock()
 
-    assert pytest_pycollect_makeitem(mock_collector, "test_one", "obj_one") == None
+    assert pytest_pycollect_makeitem(mock_collector, "test_one", "obj_one") is None
 
     mock_get_involved.assert_called()
     mock_should_include.assert_called_with(mock_collector.module, ["one.py"])
@@ -79,7 +78,7 @@ def test_pytest_pycollect_make_item_not_involved(
 
     mock_collector = mock.Mock()
 
-    assert pytest_pycollect_makeitem(mock_collector, "test_one", "obj_one") == None
+    assert pytest_pycollect_makeitem(mock_collector, "test_one", "obj_one") is None
 
     mock_get_involved.assert_called()
     mock_should_include.assert_not_called
@@ -89,7 +88,7 @@ def test_ImportSet_init():
     """Test the ImportSet constructor"""
     import_set = ImportSet("module.py", True, {"member"})
 
-    assert import_set.has_full_import == True
+    assert import_set.has_full_import
     assert import_set.module_file == "module.py"
     assert import_set.imported_members == {"member"}
 

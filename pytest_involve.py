@@ -37,7 +37,8 @@ def pytest_addoption(parser):
         "--involving",
         action="append",
         help=(
-            "Python source files, folders, modules, or module members to find tests involving"
+            "Python source files, folders, modules, "
+            "or module members to find tests involving"
         ),
     )
 
@@ -122,7 +123,10 @@ class ImportSet:
     def __repr__(self):
         """The __repr__ of an ImportSet is a string that allows it to be
         reconstructed completely"""
-        return f"ImportSet('{self.module_file}', {self.has_full_import}, {self.imported_members})"
+        return (
+            f"ImportSet('{self.module_file}', "
+            f"{self.has_full_import}, {self.imported_members})"
+        )
 
     def __str__(self):
         """The __str__ of an ImportSet is a string that indicates the module file,
@@ -250,7 +254,7 @@ def build_involved_files_and_members(
         path = resolve_file_or_module(involved_object)
         member = resolve_member_reference(involved_object)
 
-        if not path in involved_files_and_members:
+        if path not in involved_files_and_members:
             involved_files_and_members[path] = ImportSet(path, False)
 
         if member:
