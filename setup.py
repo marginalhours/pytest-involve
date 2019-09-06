@@ -23,7 +23,7 @@ setup(
     description="Run tests covering a specific file or changeset",
     long_description=read("README.rst"),
     py_modules=["pytest_involve"],
-    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+    python_requires=">=3.6",
     install_requires=["pytest>=3.5.0"],
     classifiers=[
         "Development Status :: 4 - Beta",
