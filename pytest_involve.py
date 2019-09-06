@@ -218,7 +218,7 @@ def should_module_be_included(
 
         # If we've reached the end of iterating through the intersecting files
         # and haven't returned already, then even though there are some files
-        # in common, there are no matching members, so we shoul return False.
+        # in common, there are no matching members, so we should return False.
         return False
 
     # Default: Return True to continue normal test collection from this module.
