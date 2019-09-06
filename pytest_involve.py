@@ -185,10 +185,6 @@ def should_module_be_included(
     involved_files_and_members = dict(involved_filter)
     involved_files = set(involved_files_and_members.keys())
 
-    # TODO needs to handle cases where the whole module is imported
-    # (this shows up currently as a module with a set of imported attributes
-    # containing just its own name, and who knows what aliasing will do).
-
     intersecting_files = imported_files & involved_files
 
     if not intersecting_files:
