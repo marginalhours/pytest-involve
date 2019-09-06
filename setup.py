@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name="pytest-involve",
-    version="0.1.1",
+    version="0.1.2",
     author="Tom Keefe",
     author_email="tomlkeefe@gmail.com",
     maintainer="Tom Keefe",
@@ -36,7 +36,6 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",
-        "Programming Language :: Python :: Implementation :: PyPy",
         "Operating System :: OS Independent",
         "License :: OSI Approved :: MIT License",
     ],
