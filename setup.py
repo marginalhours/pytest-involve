@@ -22,6 +22,7 @@ setup(
     url="https://github.com/MisterKeefe/pytest-involve",
     description="Run tests covering a specific file or changeset",
     long_description=read("README.rst"),
+    long_description_content_type="text/x-rst",
     py_modules=["pytest_involve"],
     python_requires=">=3.6",
     install_requires=["pytest>=3.5.0"],

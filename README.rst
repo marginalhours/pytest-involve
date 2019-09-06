@@ -1,6 +1,6 @@
-=============
+==============
 pytest-involve
-=============
+==============
 
 .. image:: https://img.shields.io/pypi/v/pytest-involve.svg
     :target: https://pypi.org/project/pytest-involve
@@ -74,8 +74,6 @@ Installation
 You can install "pytest-involve" via `pip`_ from `PyPI`_::
 
     $ pip install pytest-involve
-
-* TODO
 
 Contributing
 ------------
