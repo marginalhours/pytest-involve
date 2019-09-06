@@ -6,6 +6,7 @@ with the plugin installed"""
 import shutil
 from pathlib import Path
 
+
 def make_multiple_modules(test_dir_fixture, file_names):
     """Given a test directory fixture, create test files
     corresponding to the list of names passed in. Every file

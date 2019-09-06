@@ -306,7 +306,9 @@ def test_resolve_file_or_module() -> str:
     assert resolve_file_or_module("one.py") == str(Path(os.getcwd()) / "one.py")
 
     # Other file
-    assert resolve_file_or_module("../one.py") == str(Path(os.getcwd()).parent / "one.py")
+    assert resolve_file_or_module("../one.py") == str(
+        Path(os.getcwd()).parent / "one.py"
+    )
 
     # Module -- let's use a built-in to make things easy
     assert resolve_file_or_module("json").endswith("json/__init__.py")
