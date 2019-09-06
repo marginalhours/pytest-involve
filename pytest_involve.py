@@ -9,12 +9,16 @@ into the following four regions with #region / #endRegion:
 * data structures -- the definition of the ImportSet class
 * plugin code -- core plugin functionality
 
+TODO add support for folders from command line
+TODO fix submodule imports
+
 """
 # region imports
 
 import sys
 from functools import lru_cache
 from inspect import ismodule
+from importlib import import_module
 from pathlib import Path
 from typing import Dict, List, Set, Optional, FrozenSet, Tuple
 from types import ModuleType
@@ -33,7 +37,7 @@ def pytest_addoption(parser):
         "--involving",
         action="append",
         help=(
-            "Python source files, modules, or module members to find tests involving"
+            "Python source files, folders, modules, or module members to find tests involving"
         ),
     )
 
@@ -267,7 +271,7 @@ def resolve_file_or_module(raw_argument: str) -> str:
         return str(Path(file_or_module).resolve())
     else:
         # Not a .py file, so probably a module.
-        return __import__(file_or_module).__file__
+        return import_module(file_or_module).__file__
 
 
 def resolve_member_reference(raw_argument: str) -> Optional[str]:

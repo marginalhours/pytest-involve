@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This module contains unit tests for the functions in pytest_involve.py"""
 from unittest import mock
+from pathlib import Path
+import os
 
 import pytest
 
@@ -10,6 +12,7 @@ from pytest_involve import (
     get_involved_objects,
     get_members_by_file,
     resolve_member_reference,
+    resolve_file_or_module,
     should_module_be_included,
     ImportSet,
     pytest_addoption,
@@ -295,3 +298,18 @@ def test_resolve_member_reference_raises():
 
     with pytest.raises(ValueError):
         resolve_member_reference("module.file::one::two")
+
+
+def test_resolve_file_or_module() -> str:
+    """Test that resolve_file_or_module handles *.py file and modules"""
+    # Local file
+    assert resolve_file_or_module("one.py") == str(Path(os.getcwd()) / "one.py")
+
+    # Other file
+    assert resolve_file_or_module("../one.py") == str(Path(os.getcwd()).parent / "one.py")
+
+    # Module -- let's use a built-in to make things easy
+    assert resolve_file_or_module("json").endswith("json/__init__.py")
+
+    # Nested module -- again, let's use json
+    assert resolve_file_or_module("json.decoder").endswith("json/decoder.py")

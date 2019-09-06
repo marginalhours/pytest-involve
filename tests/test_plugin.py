@@ -3,7 +3,8 @@
 a bit more integrated than the helper tests -- they use pytest's built-in
 testdir fixture to create genuine python files and run pytest over them
 with the plugin installed"""
-
+import shutil
+from pathlib import Path
 
 def make_multiple_modules(test_dir_fixture, file_names):
     """Given a test directory fixture, create test files
@@ -498,6 +499,90 @@ def test_collection_from_module_member_whole_module_imported_and_aliased(testdir
             "test_one.py::test_func_one PASSED*",
         ]
     )
+
+    assert result.ret == 0
+
+
+def test_import_member_from_nested_module(testdir):
+    """Test importing a member from a nested module."""
+    # make a nested module
+    module_dir = testdir.mkpydir("one")
+    module_file = testdir.makepyfile(
+        two="""
+            def func_one():
+                return "one"
+        """
+    )
+    shutil.move(module_file, str(Path(module_dir) / "two.py"))
+
+    testdir.makepyfile(
+        test_one="""
+        from one.two import func_one
+
+        def test_func_one():
+            assert func_one() == "one"
+    """
+    )
+
+    result = testdir.runpytest("-v", "--involving", "one.two::func_one")
+
+    result.stdout.fnmatch_lines(["test_one.py::test_func_one PASSED*"])
+
+    assert result.ret == 0
+
+
+def test_import_nested_module_completely_specify_member(testdir):
+    """Test importing a nested module completely and specifying a member"""
+    # make a nested module
+    module_dir = testdir.mkpydir("one")
+    module_file = testdir.makepyfile(
+        two="""
+            def func_one():
+                return "one"
+        """
+    )
+    shutil.move(module_file, str(Path(module_dir) / "two.py"))
+
+    testdir.makepyfile(
+        test_one="""
+        from one import two
+
+        def test_func_one():
+            assert two.func_one() == "one"
+    """
+    )
+
+    result = testdir.runpytest("-v", "--involving", "one.two::func_one")
+
+    result.stdout.fnmatch_lines(["test_one.py::test_func_one PASSED*"])
+
+    assert result.ret == 0
+
+
+def test_import_nested_module_completely_specify_module(testdir):
+    """Test importing a nested module completely and specifying the module"""
+    # make a nested module
+    module_dir = testdir.mkpydir("one")
+    module_file = testdir.makepyfile(
+        two="""
+            def func_one():
+                return "one"
+        """
+    )
+    shutil.move(module_file, str(Path(module_dir) / "two.py"))
+
+    testdir.makepyfile(
+        test_one="""
+        from one import two
+
+        def test_func_one():
+            assert two.func_one() == "one"
+    """
+    )
+
+    result = testdir.runpytest("-v", "--involving", "one.two::func_one")
+
+    result.stdout.fnmatch_lines(["test_one.py::test_func_one PASSED*"])
 
     assert result.ret == 0
 
