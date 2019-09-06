@@ -9,9 +9,6 @@ into the following four regions with #region / #endRegion:
 * data structures -- the definition of the ImportSet class
 * plugin code -- core plugin functionality
 
-TODO add support for folders from command line
-TODO fix submodule imports
-
 """
 # region imports
 

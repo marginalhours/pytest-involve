@@ -19,10 +19,10 @@ pytest-involve
     :alt: See Build Status on AppVeyor
 
 ``pytest-involve`` is a ``pytest`` plugin for running only tests which cover a given file
-or set of files. It's called ``pytest-involve`` because it lets you run tests "involving"
+or set of files. It's called ``pytest-involve`` because it lets you run only tests involving
 modules or members from those modules.
 
-Usually the test set to run is specified and coverage collected based on that set. When ``pytest-involve``
+Usually with ``pytest`` the test set to run is specified and coverage collected based on that set. When ``pytest-involve``
 is used, instead you specify the file(s) you want to cover, and test files are selected based
 on whether they import from those file(s) or not.
 
