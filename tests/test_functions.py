@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This module contains unit tests for the helpers in pytest_involve.py"""
+"""This module contains unit tests for the functions in pytest_involve.py"""
 from unittest import mock
 
 import pytest
@@ -12,10 +12,122 @@ from pytest_involve import (
     resolve_member_reference,
     should_module_be_included,
     ImportSet,
+    pytest_addoption,
+    pytest_pycollect_makeitem,
+    pytest_report_header,
 )
 
 
 MODULE = "pytest_involve"
+
+
+@mock.patch(MODULE + ".get_involved_objects", autospec=True)
+def test_pytest_report_header(mock_get_involved):
+    mock_get_involved.return_value = ["one.py", "two.py"]
+
+    assert pytest_report_header(None) == [
+        "Running tests involving:",
+        "    one.py",
+        "    two.py",
+    ]
+
+    mock_get_involved.assert_called()
+
+
+@mock.patch(MODULE + ".should_module_be_included", autospec=True)
+@mock.patch(MODULE + ".get_involved_files_and_members", autospec=True)
+def test_pytest_pycollect_make_item_succeeds(mock_get_involved, mock_should_include):
+    """Test pytest_pycollect_make_item when there are involved values and the
+    module should be included"""
+    mock_get_involved.return_value = ["one.py"]
+    mock_should_include.return_value = True
+
+    mock_collector = mock.Mock()
+
+    assert pytest_pycollect_makeitem(mock_collector, "test_one", "obj_one") == None
+
+    mock_get_involved.assert_called()
+    mock_should_include.assert_called_with(mock_collector.module, ["one.py"])
+
+
+@mock.patch(MODULE + ".should_module_be_included", autospec=True)
+@mock.patch(MODULE + ".get_involved_files_and_members", autospec=True)
+def test_pytest_pycollect_make_item_fails(mock_get_involved, mock_should_include):
+    """Test pytest_pycollect_make_item when there are involved values and the
+    module should not be included"""
+    mock_get_involved.return_value = ["one.py"]
+    mock_should_include.return_value = False
+
+    mock_collector = mock.Mock()
+
+    assert pytest_pycollect_makeitem(mock_collector, "test_one", "obj_one") == []
+
+    mock_get_involved.assert_called()
+    mock_should_include.assert_called_with(mock_collector.module, ["one.py"])
+
+
+@mock.patch(MODULE + ".should_module_be_included", autospec=True)
+@mock.patch(MODULE + ".get_involved_files_and_members", autospec=True)
+def test_pytest_pycollect_make_item_not_involved(
+    mock_get_involved, mock_should_include
+):
+    """Test pytest_pycollect_make_item when there are no involved values"""
+    mock_get_involved.return_value = []
+
+    mock_collector = mock.Mock()
+
+    assert pytest_pycollect_makeitem(mock_collector, "test_one", "obj_one") == None
+
+    mock_get_involved.assert_called()
+    mock_should_include.assert_not_called
+
+
+def test_ImportSet_init():
+    """Test the ImportSet constructor"""
+    import_set = ImportSet("module.py", True, {"member"})
+
+    assert import_set.has_full_import == True
+    assert import_set.module_file == "module.py"
+    assert import_set.imported_members == {"member"}
+
+
+def test_ImportSet_equality():
+    """Test the ImportSet __eq__ implementation"""
+
+    # Equal -- same file
+    assert ImportSet("module.py", True) == ImportSet("module.py", True)
+
+    # Equal -- same file, same members
+    assert ImportSet("module.py", False, {"member1"}) == ImportSet(
+        "module.py", False, {"member1"}
+    )
+
+    # Not equal -- one has full import, other doesn't
+    assert ImportSet("module.py", True) != ImportSet("module.py", False)
+
+    # Not equal -- different files
+    assert ImportSet("module1.py", True) != ImportSet("module2.py", True)
+
+    # Not equal -- same files, different members
+    assert ImportSet("module.py", False, {"member1"}) != ImportSet(
+        "module.py", False, {"member2"}
+    )
+
+
+def test_ImportSet_hash():
+    """Test the ImportSet __hash__ implementation"""
+    import_set = ImportSet("module.py", True, {"member1"})
+    set_as_tuple = ("module.py", True, frozenset(["member1"]))
+
+    assert hash(import_set) == hash(set_as_tuple)
+
+
+def test_ImportSet_to_string():
+    """Test the ImportSet __str__ implementation"""
+    import_set = ImportSet("module.py", True, {"member1"})
+
+    assert str(import_set) == "<ImportSet module.py [✓] -- {'member1'} >"
+    assert repr(import_set) == "ImportSet('module.py', True, {'member1'})"
 
 
 @mock.patch(MODULE + ".resolve_member_reference", autospec=True)
@@ -99,10 +211,7 @@ def test_get_members_by_file(mock_is_module):
 
     assert get_members_by_file(
         {"mock_module_1": mock_member_1, "mock_module_2": mock_member_2}
-    ) == {
-        "one.py": ImportSet("mock_module_1", True),
-        "two.py": ImportSet("mock_module_2", True),
-    }
+    ) == {"one.py": ImportSet("one.py", True), "two.py": ImportSet("two.py", True)}
 
 
 @mock.patch(MODULE + ".get_members_by_file", autospec=True)

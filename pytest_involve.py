@@ -108,20 +108,26 @@ class ImportSet:
         """Equality implementation mostly used for testing"""
         if not isinstance(other, ImportSet):
             return False
+        if not self.module_file == other.module_file:
+            return False
         elif self.has_full_import != other.has_full_import:
             return False
         else:
             return self.imported_members == other.imported_members
 
     def __repr__(self):
-        return str(self)
+        """The __repr__ of an ImportSet is a string that allows it to be
+        reconstructed completely"""
+        return f"ImportSet('{self.module_file}', {self.has_full_import}, {self.imported_members})"
 
     def __str__(self):
+        """The __str__ of an ImportSet is a string that indicates the module file,
+        whether it's fully imported or not, and then a list of its members."""
         module_status_string = "✓" if self.has_full_import else "✗"
         return (
             f"<ImportSet "
             f"{self.module_file} [{module_status_string}] "
-            f"-- {self.imported_members}"
+            f"-- {self.imported_members} >"
         )
 
 
