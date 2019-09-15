@@ -14,12 +14,6 @@ pytest-involve
     :target: https://travis-ci.org/MisterKeefe/pytest-involve
     :alt: See Build Status on Travis CI
 
-.. image:: https://ci.appveyor.com/api/projects/status/github/MisterKeefe/pytest-involve?branch=master
-    :target: https://ci.appveyor.com/project/MisterKeefe/pytest-involve/branch/master
-    :alt: See Build Status on AppVeyor
-
-
-
 ``pytest-involve`` is a ``pytest`` plugin for running only tests which cover a given file
 or set of files. It's called ``pytest-involve`` because it lets you run only tests involving
 modules or members from those modules.
@@ -52,7 +46,14 @@ aren't strictly necessary, but it shouldn't ignore any tests that are.
 The ``::member`` syntax will only work for things with a ``__file__`` attribute
 (so, mostly classes and functions).
 
-``pytest-involve`` should play nicely with most other ``pytest`` plugins.
+``pytest-involve`` should play nicely with most other ``pytest`` plugins and command line tooling.
+One useful example is as follows:
+
+``git status -s | cut -c4- | grep .py | sed "s/^/--involving /" | xargs pytest``
+
+This will take all ``*.py`` files mentioned in the output of ``git status`` and provide them
+to ``pytest`` prefixed with ``--involving``, which allows for quickly running unit tests
+relevant to the current state of the repository.
 
 ----
 
