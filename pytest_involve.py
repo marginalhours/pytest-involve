@@ -13,12 +13,13 @@ into the following four regions with #region / #endRegion:
 # region imports
 
 import sys
+from collections.abc import Hashable
 from functools import lru_cache
-from inspect import ismodule
 from importlib import import_module
+from inspect import ismodule
 from pathlib import Path
-from typing import Dict, List, Set, Optional, FrozenSet, Tuple
 from types import ModuleType
+from typing import Dict, FrozenSet, List, Optional, Set, Tuple
 
 # endregion
 
@@ -321,7 +322,7 @@ def get_members_by_file(module_members: Dict[str, object]) -> Dict[str, ImportSe
         else:
             module_name = getattr(member, "__module__", None)
             if module_name:
-                module = sys.modules[module_name]
+                module = get_module(module_name)
                 if hasattr(module, "__file__"):
 
                     if module.__file__ not in module_files:
@@ -329,11 +330,20 @@ def get_members_by_file(module_members: Dict[str, object]) -> Dict[str, ImportSe
                             module.__file__, False
                         )
 
-                    module_files[module.__file__].imported_members.add(
-                        getattr(member, "__name__", member_name)
-                    )
+                    usable_name = getattr(member, "__name__", member_name)
+
+                    if not isinstance(usable_name, Hashable):
+                        usable_name = member_name
+
+                    module_files[module.__file__].imported_members.add(usable_name)
 
     return module_files
+
+
+def get_module(name):
+    """This helper method has been extracted to make it easier to test the
+    logic of get_members_by_file"""
+    return sys.modules[name]
 
 
 # endregion
