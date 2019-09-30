@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 """This module contains unit tests for the functions in pytest_involve.py"""
-from unittest import mock
-from pathlib import Path
 import os
+from pathlib import Path
+from unittest import mock
 
 import pytest
 
 from pytest_involve import (
+    ImportSet,
     build_involved_files_and_members,
     get_involved_files_and_members,
     get_involved_objects,
     get_members_by_file,
-    resolve_member_reference,
-    resolve_file_or_module,
-    should_module_be_included,
-    ImportSet,
     pytest_pycollect_makeitem,
     pytest_report_header,
+    resolve_file_or_module,
+    resolve_member_reference,
+    should_module_be_included,
 )
-
 
 MODULE = "pytest_involve"
 
@@ -214,6 +213,26 @@ def test_get_members_by_file(mock_is_module):
     assert get_members_by_file(
         {"mock_module_1": mock_member_1, "mock_module_2": mock_member_2}
     ) == {"one.py": ImportSet("one.py", True), "two.py": ImportSet("two.py", True)}
+
+
+@mock.patch(MODULE + ".get_module", autospec=True)
+@mock.patch(MODULE + ".ismodule", autospec=True)
+def test_get_members_by_file_bad_name_property(mock_is_module, mock_get_module):
+    """Test that get_members_by_file deals with objects with an unhashable
+    __name__ property (for EG, lists)"""
+    mock_is_module.return_value = False
+
+    mock_module = mock.Mock()
+    mock_module.__file__ = "one.py"
+    mock_get_module.return_value = mock_module
+
+    mock_member_1 = mock.MagicMock()
+    mock_member_1.__name__ = []
+    mock_member_1.__file__ = "one.py"
+
+    assert get_members_by_file({"mock_module_1": mock_member_1}) == {
+        "one.py": ImportSet("one.py", False, {"mock_module_1"})
+    }
 
 
 @mock.patch(MODULE + ".get_members_by_file", autospec=True)

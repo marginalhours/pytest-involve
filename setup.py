@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
 import codecs
+import os
+
 from setuptools import setup
 
 
@@ -13,7 +14,7 @@ def read(fname):
 
 setup(
     name="pytest-involve",
-    version="0.1.2",
+    version="0.1.3",
     author="Tom Keefe",
     author_email="tomlkeefe@gmail.com",
     maintainer="Tom Keefe",
