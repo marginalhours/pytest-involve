@@ -14,7 +14,7 @@ def read(fname):
 
 setup(
     name="pytest-involve",
-    version="0.1.3",
+    version="0.1.4",
     author="Tom Keefe",
     author_email="tomlkeefe@gmail.com",
     maintainer="Tom Keefe",
